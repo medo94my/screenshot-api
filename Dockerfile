@@ -1,7 +1,13 @@
 FROM python:3.12-slim
 
-# Let Playwright install handle all browser dependencies
-# No manual apt packages needed - --with-deps installs everything Chromium requires
+# Install minimal system dependencies for Chromium
+RUN apt-get update && apt-get install -y \
+    wget gnupg2 ca-certificates \
+    libgtk-3-0 libxcomposite1 libxdamage1 libxrandr2 libxkbcommon0 \
+    libasound2 libpangocairo-1.0-0 libcairo-gobject2 libgdk-pixbuf-2.0-0 \
+    libxcursor1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 WORKDIR /app
 
