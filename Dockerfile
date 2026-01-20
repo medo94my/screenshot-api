@@ -46,17 +46,17 @@ RUN mkdir -p /tmp/screenshot-cache
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# Default port - Render will override this with $PORT
+ENV PORT=5000
+ENV HOST=0.0.0.0
 
-# Expose port (Render will set PORT)
+# Expose port
 EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-5000}/health')" || exit 1
 
 # Run with Gunicorn
-# -w 2: 2 workers for handling concurrent requests
-# -k gthread: thread-based workers for async operations
-# -t 120: 120 second timeout for long-running requests
-# -b 0.0.0.0:$PORT: bind to all interfaces on the Render-assigned port
-CMD ["gunicorn", "-w", "2", "-k", "gthread", "-t", "120", "-b", "0.0.0.0:$PORT", "app.main:app"]
+# Note: PORT is automatically set by Render for web services
+CMD gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:${PORT:-5000} app.main:app

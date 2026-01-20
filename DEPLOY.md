@@ -25,7 +25,7 @@ https://dashboard.render.com/blueprints/new?repo=https://github.com/medo94my/scr
      ```
    - **Start Command**:
      ```
-     gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:$PORT app.main:app
+     gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:${PORT:-5000} app.main:app
      ```
 5. Add environment variables (optional):
    ```

@@ -1,32 +1,29 @@
 # Syntax: https://render.com/docs/yaml-spec
 
 # Screenshot API Service Blueprint for Render
+# Deploy via: https://dashboard.render.com/blueprints/new?repo=https://github.com/medo94my/screenshot-api
 
 services:
   - name: screenshot-api
     type: web
-    plan: standard  # Minimum recommended: Standard (1 GB RAM)
-    region: oregon  # Change to your preferred region
-    env: python     # We use Docker, but Render needs to know it's Python for some features
+    plan: standard  # Standard (1 GB RAM) recommended for Playwright
+    region: oregon
     
-    # Docker-specific configuration
+    # Docker deployment
     docker:
       context: .
       dockerfile: Dockerfile
     
-    # Health check path
+    # Health check
     healthCheckPath: /health
     
     # Environment variables
+    # Note: PORT is automatically set by Render for web services
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
       - key: HOST
         value: "0.0.0.0"
-      - key: PORT
-        fromService:
-          type: web
-          property: port
       - key: MAX_CONCURRENCY
         value: "2"
       - key: RATE_LIMIT_PER_MINUTE
@@ -39,25 +36,10 @@ services:
         value: "30000"
       - key: DEBUG
         value: "false"
+      - key: MAX_DELAY_MS
+        value: "5000"
     
-    # Scaling (optional - adjust based on needs)
+    # Scaling
     scaling:
       minInstances: 1
-      maxInstances: 1  # Start with 1, increase if needed
-
-# Note: This blueprint file is for reference. Render Blueprints
-# are typically deployed via the Render Dashboard or CLI.
-#
-# To deploy:
-# 1. Push this repository to GitHub
-# 2. Go to https://dashboard.render.com/blueprints
-# 3. Click "New Blueprint Instance"
-# 4. Connect your GitHub repository
-# 5. Render will detect render.yaml and deploy accordingly
-#
-# Alternatively, deploy manually:
-# 1. Create a Web Service on Render
-# 2. Connect your GitHub repository
-# 3. Set Build Command and Start Command as specified in README.md
-# 4. Configure environment variables
-# 5. Deploy
+      maxInstances: 1

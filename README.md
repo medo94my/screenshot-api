@@ -236,10 +236,10 @@ The service implements multiple layers of protection against Server-Side Request
    - Go to [Render Dashboard](https://dashboard.render.com)
    - Click "New +" and select "Web Service"
    - Connect your GitHub repository
-   - Configure the service:
-     - **Build Command**: `pip install -r requirements.txt && playwright install --with-deps chromium`
-     - **Start Command**: `gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:$PORT app.main:app`
-     - **Instance Type**: Choose an appropriate tier (minimum 1 GB RAM recommended)
+    - Configure the service:
+      - **Build Command**: `pip install -r requirements.txt && playwright install --with-deps chromium`
+      - **Start Command**: `gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:${PORT:-5000} app.main:app`
+      - **Instance Type**: Choose an appropriate tier (minimum 1 GB RAM recommended)
    - Set environment variables (optional):
      - `CACHE_TTL_SECONDS`: 300
      - `MAX_CONCURRENCY`: 2
@@ -252,7 +252,7 @@ The service implements multiple layers of protection against Server-Side Request
 
 ### Option 2: Render Blueprint (render.yaml)
 
-Render supports declarative deployments using `render.yaml`:
+Render supports declarative deployments using `render.yaml`. The service uses Docker, and Render automatically sets the `PORT` environment variable.
 
 ```yaml
 services:
@@ -260,10 +260,13 @@ services:
     name: screenshot-api
     plan: standard
     region: oregon
+    docker:
+      context: .
+      dockerfile: Dockerfile
     buildCommand: |
       pip install -r requirements.txt
       playwright install --with-deps chromium
-    startCommand: gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:$PORT app.main:app
+    startCommand: gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:${PORT:-5000} app.main:app
     envVars:
       - key: CACHE_TTL_SECONDS
         value: 300
