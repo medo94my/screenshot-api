@@ -97,7 +97,7 @@ else
                 \"branch\": \"main\",
                 \"rootDir\": \"\",
                 \"buildCommand\": \"pip install -r requirements.txt && playwright install --with-deps chromium\",
-                \"startCommand\": \"gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:\\\$PORT app.main:app\",
+                \"startCommand\": \"gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:\\\${PORT:-5000} app.main:app\",
                 \"env\": \"python\",
                 \"buildPlan\": \"standard\",
                 \"autoDeploy\": \"yes\",
