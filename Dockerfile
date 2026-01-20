@@ -1,25 +1,7 @@
 FROM python:3.12-slim
 
-# Install ALL system dependencies required by Chromium/Playwright
-RUN apt-get update && apt-get install -y \
-    wget gnupg2 ca-certificates fonts-liberation libasound2 \
-    libatk-bridge2.0-0 libatk1.0-0 libcups2 libdbus-1-3 libdrm2 \
-    libgbm1 libgtk-3-0 libnspr4 libnss3 libx11-xcb1 libxcomposite1 \
-    libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 xdg-utils \
-    libxshmfence1 libpq5 libxcb1 libx11-6 libxext6 libxrender1 \
-    libxtst6 libxi6 libpango-1.0-0 libpangocairo-1.0-0 libcairo2 \
-    libgstreamer-1.0-0 libgstallocators-1.0-0 libgstapp-1.0-0 \
-    libgstbase-1.0-0 libgstpbutils-1.0-0 libgstaudio-1.0-0 \
-    libgsttag-1.0-0 libgstvideo-1.0-0 libgstgl-1.0-0 \
-    libgstcodecparsers-1.0-0 libgstfft-1.0-0 libgtk-4-1 \
-    libgraphene-1.0-0 libicu libicuuc76 libicudata76 \
-    libxslt1.1 libwoff2dec1.1.0.2 libvpx9 libevent-2.1-7 \
-    libopus0 libwebpdemux2 libjxl0.11 libavif16 \
-    libharfbuzz-icu0 libwebpmux3 libflite1 libenchant-2-2 \
-    libsecret-1-0 libhyphen0 libmanette-0.2-0 libnghttp2-14 \
-    libx264 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+# Let Playwright install handle all browser dependencies
+# No manual apt packages needed - --with-deps installs everything Chromium requires
 
 WORKDIR /app
 
