@@ -1,0 +1,33 @@
+# Docker Compose for local testing and VPS deployment
+
+services:
+  screenshot-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: screenshot-api
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - HOST=0.0.0.0
+      - MAX_CONCURRENCY=2
+      - RATE_LIMIT_PER_MINUTE=30
+      - CACHE_TTL_SECONDS=300
+      - CACHE_DIR=/tmp/screenshot-cache
+      - NAV_TIMEOUT_MS=30000
+      - DEBUG=false
+      - MAX_DELAY_MS=5000
+    volumes:
+      - screenshot-cache:/tmp/screenshot-cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=10)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  screenshot-cache:
+    driver: local
