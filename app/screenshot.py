@@ -51,24 +51,37 @@ class ScreenshotRenderer:
         self._playwright: Optional[async_playwright] = None
         self._browser: Optional[PlaywrightBrowser] = None
         self._semaphore: Optional[asyncio.Semaphore] = None
+        self._lock = asyncio.Lock()
 
     async def start(self) -> None:
         """Initialize Playwright and launch the browser."""
-        self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(
-            headless=True, args=self.config.CHROMIUM_ARGS
-        )
-        self._semaphore = asyncio.Semaphore(self.config.MAX_CONCURRENCY)
+        async with self._lock:
+            if self._browser is not None:
+                return  # Already started
+
+            self._playwright = await async_playwright().start()
+            self._browser = await self._playwright.chromium.launch(
+                headless=True, args=self.config.CHROMIUM_ARGS
+            )
+            self._semaphore = asyncio.Semaphore(self.config.MAX_CONCURRENCY)
+
+    async def ensure_started(self) -> None:
+        """Ensure the browser is started. Thread-safe lazy initialization."""
+        if self._semaphore is None:
+            await self.start()
 
     async def close(self) -> None:
         """Close the browser and stop Playwright."""
-        if self._browser:
-            await self._browser.close()
-            self._browser = None
+        async with self._lock:
+            if self._browser:
+                await self._browser.close()
+                self._browser = None
 
-        if self._playwright:
-            await self._playwright.stop()
-            self._playwright = None
+            if self._playwright:
+                await self._playwright.stop()
+                self._playwright = None
+
+            self._semaphore = None
 
     def _should_block_request(self, url: str) -> bool:
         """Check if a request should be blocked based on SSRF protection."""
@@ -100,6 +113,9 @@ class ScreenshotRenderer:
         quality: int = 85,
     ) -> bytes:
         """Capture a screenshot of the given URL with SSRF protection."""
+        # Ensure browser is started
+        await self.ensure_started()
+
         async with self._semaphore:
             # Validate and clamp parameters
             width = clamp(width, 320, 1920)
@@ -129,7 +145,7 @@ class ScreenshotRenderer:
                         try:
                             await page.goto(
                                 url,
-                                wait_until="networkidle",
+                                wait_until="domcontentloaded",
                                 timeout=self.config.NAV_TIMEOUT_MS,
                             )
                         except PlaywrightError as e:
@@ -237,14 +253,17 @@ class ScreenshotRenderer:
 
 # Global renderer instance
 _renderer: Optional[ScreenshotRenderer] = None
+_renderer_lock = asyncio.Lock()
 
 
 async def get_renderer() -> ScreenshotRenderer:
-    """Get the global renderer instance."""
+    """Get the global renderer instance with lazy initialization."""
     global _renderer
     if _renderer is None:
-        _renderer = ScreenshotRenderer()
-        await _renderer.start()
+        async with _renderer_lock:
+            if _renderer is None:
+                _renderer = ScreenshotRenderer()
+                await _renderer.start()
     return _renderer
 
 
